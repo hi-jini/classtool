@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏫 우리반 학급도구 (Classroom Tools)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons for Beautiful UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Pen+Script&family=Nunito:wght@400;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Nunito', 'Gowun Dodum', sans-serif;
+    }
+
+    /* Webkit 커스텀 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(243, 244, 246, 0.5);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #fbcfe8; /* Soft pink scrollbar */
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f472b6;
+    }
+
+    /* 애니메이션 효과 */
+    @keyframes popIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop-in {
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* 벚꽃잎 떨어지는 배경 효과 (데코레이션용) */
+    .cherry-petal {
+      position: absolute;
+      background-color: #fbcfe8;
+      border-radius: 150% 0 150% 150%;
+      opacity: 0.6;
+      pointer-events: none;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(105vh) translateX(100px) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-[#fffbeb] min-h-screen flex flex-col relative overflow-x-hidden text-gray-800">
+
+  <!-- 벚꽃 배경 장식 컨테이너 -->
+  <div id="petal-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+  <!-- 1. 로딩 화면 (Loading Screen) -->
+  <div id="loading-screen" class="fixed inset-0 bg-pink-50 z-50 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="relative flex items-center justify-center">
+      <div class="w-20 h-20 border-8 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+      <i class="fa-solid fa-school absolute text-2xl text-pink-500"></i>
+    </div>
+    <p class="mt-6 text-pink-600 font-bold text-lg animate-pulse">우리반 학급 도구 상자 여는 중...</p>
+  </div>
+
+  <!-- 메인 레이아웃 -->
+  <div class="relative z-10 flex flex-col min-h-screen">
+    
+    <!-- 상단 헤더 -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-pink-100 shadow-sm sticky top-0">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- 로고 및 서비스 타이틀 (이미지 감성 녹임) -->
+        <div class="flex items-center gap-3">
+          <div class="bg-pink-100 p-2.5 rounded-full text-pink-500 shadow-inner">
+            <i class="fa-solid fa-graduation-cap text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-extrabold text-pink-600 tracking-tight flex items-center gap-1">
+              우리 반 설렘 상자 <span class="text-xs bg-pink-200 text-pink-700 px-2 py-0.5 rounded-full font-bold">2026</span>
+            </h1>
+            <p class="text-xs text-gray-400">학습의 설렘과 정돈된 일상을 돕는 필수 도구들</p>
+          </div>
+        </div>
+
+        <!-- 탭 네비게이션 -->
+        <nav class="flex items-center bg-gray-100/80 p-1 rounded-2xl gap-1">
+          <button onclick="switchTab('timetable')" id="tab-timetable" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 bg-white text-pink-600 shadow-sm">
+            <i class="fa-solid fa-calendar-days text-pink-500"></i><span>🗓️ 시간표</span>
+          </button>
+          <button onclick="switchTab('random')" id="tab-random" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 text-gray-500 hover:text-pink-600">
+            <i class="fa-solid fa-dice text-purple-500"></i><span>🎲 랜덤뽑기</span>
+          </button>
+          <button onclick="switchTab('notepad')" id="tab-notepad" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 text-gray-500 hover:text-pink-600">
+            <i class="fa-solid fa-note-sticky text-yellow-500"></i><span>📝 메모장</span>
+          </button>
+          <button onclick="switchTab('timer')" id="tab-timer" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 text-gray-500 hover:text-pink-600">
+            <i class="fa-solid fa-stopwatch text-blue-500"></i><span>⏳ 타이머</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6">
+      
+      <!-- [탭 1] 시간표 (Timetable) -->
+      <section id="content-timetable" class="tab-content block">
+        <div class="bg-white rounded-3xl p-6 shadow-xl border border-pink-100">
+          
+          <!-- 헤더 툴바 -->
+          <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                🗓️ 주간 학습 시간표
+                <span class="text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-medium" id="mode-badge">일반 모드</span>
+              </h2>
+              <p class="text-sm text-gray-400 mt-1">설정 모드에서는 방향키로 자유롭게 이동하며 일괄 수정이 가능합니다.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleTimetableMode()" id="btn-edit-mode" class="px-5 py-2.5 bg-pink-500 text-white rounded-2xl font-bold hover:bg-pink-600 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                <i class="fa-solid fa-gear"></i><span id="btn-edit-text">시간표 설정 모드</span>
+              </button>
+              <button onclick="openClearModal()" class="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-trash-can"></i><span>전체 삭제</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 설정 모드 전용 일괄 처리 바 (Hidden by default) -->
+          <div id="batch-bar" class="hidden bg-yellow-50 border border-yellow-200 p-4 rounded-2xl mb-6 items-center flex-wrap justify-between gap-4 animate-pop-in">
+            <div class="flex items-center gap-3">
+              <span class="text-yellow-800 font-bold text-sm">💡 일괄 설정 도구:</span>
+              <button onclick="selectAllTimetable(true)" class="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded-lg font-medium hover:bg-gray-50">전체 선택</button>
+              <button onclick="selectAllTimetable(false)" class="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded-lg font-medium hover:bg-gray-50">선택 해제</button>
+            </div>
+            <div class="flex items-center gap-4 flex-wrap">
+              <!-- 일괄 색상 -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-gray-500">글자색:</span>
+                <button onclick="batchChangeColor('text-slate-800')" class="w-6 h-6 rounded-full bg-slate-800 border-2 border-white shadow hover:scale-110 transition-transform" title="검정"></button>
+                <button onclick="batchChangeColor('text-blue-600')" class="w-6 h-6 rounded-full bg-blue-600 border-2 border-white shadow hover:scale-110 transition-transform" title="파랑"></button>
+                <button onclick="batchChangeColor('text-red-500')" class="w-6 h-6 rounded-full bg-red-500 border-2 border-white shadow hover:scale-110 transition-transform" title="빨강"></button>
+              </div>
+              <div class="h-5 w-px bg-yellow-200"></div>
+              <!-- 일괄 고정 -->
+              <div class="flex items-center gap-2">
+                <button onclick="batchSetLock(true)" class="text-xs bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-600 flex items-center gap-1">
+                  <i class="fa-solid fa-lock"></i> 고정
+                </button>
+                <button onclick="batchSetLock(false)" class="text-xs bg-rose-500 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-rose-600 flex items-center gap-1">
+                  <i class="fa-solid fa-unlock"></i> 해제
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 시간표 테이블 격자구조 -->
+          <div class="overflow-x-auto rounded-2xl border border-gray-100">
+            <table class="w-full border-collapse min-w-[650px] text-center">
+              <thead>
+                <tr>
+                  <!-- 첫번째 헤더 컬럼 (노란색 배경) -->
+                  <th class="bg-yellow-200 border border-yellow-300 p-4 text-yellow-900 font-extrabold w-24">교시</th>
+                  <th class="bg-yellow-100/50 border border-yellow-200 p-4 text-pink-700 font-extrabold">월</th>
+                  <th class="bg-yellow-100/50 border border-yellow-200 p-4 text-pink-700 font-extrabold">화</th>
+                  <th class="bg-yellow-100/50 border border-yellow-200 p-4 text-pink-700 font-extrabold">수</th>
+                  <th class="bg-yellow-100/50 border border-yellow-200 p-4 text-pink-700 font-extrabold">목</th>
+                  <th class="bg-yellow-100/50 border border-yellow-200 p-4 text-pink-700 font-extrabold">금</th>
+                </tr>
+              </thead>
+              <tbody id="timetable-body">
+                <!-- Javascript를 통해 동적으로 1~6교시 생성 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- [탭 2] 랜덤뽑기 (Random Picker) -->
+      <section id="content-random" class="tab-content hidden">
+        <div class="bg-white rounded-3xl p-6 shadow-xl border border-pink-100">
+          
+          <!-- 헤더 -->
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              🎲 공정한 랜덤 번호 뽑기
+            </h2>
+            <p class="text-sm text-gray-400 mt-1">Fisher-Yates 셔플 알고리즘을 사용한 정밀한 중복 방지 무작위 추출기입니다.</p>
+          </div>
+
+          <!-- 설정 카드 상단 -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-pink-50/50 p-5 rounded-2xl border border-pink-100 mb-8">
+            <div>
+              <label class="block text-xs font-bold text-pink-700 mb-2">시작 번호</label>
+              <input type="number" id="random-start" value="1" min="1" class="w-full px-4 py-2.5 rounded-xl border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-500 font-semibold text-center">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-pink-700 mb-2">끝 번호</label>
+              <input type="number" id="random-end" value="30" min="1" class="w-full px-4 py-2.5 rounded-xl border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-500 font-semibold text-center">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-pink-700 mb-2">동시 추첨 개수</label>
+              <input type="number" id="random-count" value="1" min="1" class="w-full px-4 py-2.5 rounded-xl border border-pink-200 focus:outline-none focus:ring-2 focus:ring-pink-500 font-semibold text-center">
+            </div>
+            <div class="flex items-end">
+              <button onclick="drawRandomNumbers()" class="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-lg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>번호 추첨!</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 번호 표시 거대 윈도우 -->
+          <div class="flex flex-col items-center justify-center bg-radial-gradient py-12 px-6 rounded-3xl border border-pink-50 mb-8 relative overflow-hidden bg-gradient-to-br from-pink-50/20 via-white to-orange-50/20 shadow-inner">
+            <div class="absolute top-4 left-4 text-xs font-bold text-pink-300">CURRENT LUCKY NUMBERS</div>
+            
+            <!-- 결과 텍스트 영역 -->
+            <div id="draw-display" class="text-center min-h-[140px] flex items-center justify-center flex-wrap gap-6 text-7xl md:text-8xl font-black text-rose-500 drop-shadow-md">
+              <span class="text-2xl text-gray-400 font-bold">도전할 번호의 범위를 정하고 추첨을 진행해 보세요!</span>
+            </div>
+
+            <!-- 세션 리셋용 버튼 -->
+            <button onclick="resetRandomPicker()" class="mt-8 text-xs text-rose-400 hover:text-rose-600 font-bold flex items-center gap-1 bg-white px-4 py-2 rounded-full border border-pink-100 hover:shadow-sm transition-all">
+              <i class="fa-solid fa-arrows-rotate"></i> 추첨 현황 초기화
+            </button>
+          </div>
+
+          <!-- 하단 번호 그리드 상태판 -->
+          <div>
+            <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-list-ol text-pink-500"></i> 번호 현황판
+              <span class="text-xs text-gray-400 font-normal">(체크된 번호는 이미 추첨된 번호입니다)</span>
+            </h3>
+            <div id="number-board-grid" class="grid grid-cols-5 sm:grid-cols-10 gap-2">
+              <!-- JS 로 동적으로 보드 채워짐 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- [탭 3] 메모장 (Notepad) -->
+      <section id="content-notepad" class="tab-content hidden">
+        <div class="bg-white rounded-3xl shadow-xl border border-pink-100 overflow-hidden flex flex-col md:flex-row h-[650px]">
+          
+          <!-- 좌측 사이드바 (모바일에서는 기본 히든 및 슬라이드 토글 필요) -->
+          <div id="memo-sidebar" class="w-full md:w-80 bg-pink-50/40 border-r border-pink-100 flex flex-col h-full transition-all duration-300">
+            <div class="p-4 border-b border-pink-100 flex items-center justify-between">
+              <h3 class="font-bold text-pink-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-folder-open text-pink-500"></i> 내 메모 리스트
+              </h3>
+              <button onclick="addNewMemo()" class="bg-pink-500 hover:bg-pink-600 text-white w-9 h-9 rounded-xl flex items-center justify-center font-bold shadow-sm transition-colors" title="새 메모">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+            
+            <!-- 메모 목록 리스트 -->
+            <div id="memo-list" class="flex-grow overflow-y-auto p-3 space-y-2.5">
+              <!-- JS 동적 생성 -->
+            </div>
+          </div>
+
+          <!-- 우측 에디터 영역 -->
+          <div class="flex-grow flex flex-col h-full bg-white relative">
+            
+            <!-- 모바일용 사이드바 토글 버튼 (데스크톱에선 히든) -->
+            <div class="md:hidden bg-pink-50/50 p-2 border-b border-pink-100 flex items-center justify-between">
+              <button onclick="toggleMemoSidebar()" class="px-3 py-1.5 bg-pink-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-list"></i> 목록 보기 / 닫기
+              </button>
+              <span class="text-xs text-pink-600 font-bold" id="mobile-memo-status">새 메모장</span>
+            </div>
+
+            <!-- 서식 툴바 (WYSIWYG) -->
+            <div class="bg-gray-50/80 p-2.5 border-b border-gray-100 flex flex-wrap items-center gap-1.5 text-gray-600 select-none z-10">
+              <!-- 글자 크기 -->
+              <select onchange="execEditorCommand('fontSize', this.value)" onmousedown="event.preventDefault()" class="px-2 py-1 text-xs border border-gray-200 rounded bg-white font-semibold focus:outline-none">
+                <option value="3">보통 크기</option>
+                <option value="2">작은 크기</option>
+                <option value="5">크게</option>
+                <option value="7">매우 크게</option>
+              </select>
+
+              <div class="h-4 w-px bg-gray-300 mx-1"></div>
+
+              <!-- 서식 스타일 4가지 -->
+              <button onclick="execEditorCommand('bold')" onmousedown="event.preventDefault()" class="w-8 h-8 rounded hover:bg-pink-100/60 hover:text-pink-600 transition-colors flex items-center justify-center" title="굵게">
+                <i class="fa-solid fa-bold text-sm"></i>
+              </button>
+              <button onclick="execEditorCommand('underline')" onmousedown="event.preventDefault()" class="w-8 h-8 rounded hover:bg-pink-100/60 hover:text-pink-600 transition-colors flex items-center justify-center" title="밑줄">
+                <i class="fa-solid fa-underline text-sm"></i>
+              </button>
+              <button onclick="execEditorCommand('italic')" onmousedown="event.preventDefault()" class="w-8 h-8 rounded hover:bg-pink-100/60 hover:text-pink-600 transition-colors flex items-center justify-center" title="기울임">
+                <i class="fa-solid fa-italic text-sm"></i>
+              </button>
+              <button onclick="execEditorCommand('strikeThrough')" onmousedown="event.preventDefault()" class="w-8 h-8 rounded hover:bg-pink-100/60 hover:text-pink-600 transition-colors flex items-center justify-center" title="취소선">
+                <i class="fa-solid fa-strikethrough text-sm"></i>
+              </button>
+
+              <div class="h-4 w-px bg-gray-300 mx-1"></div>
+
+              <!-- 글자 색상 (7가지) -->
+              <div class="relative group">
+                <button onmousedown="event.preventDefault()" class="w-8 h-8 rounded hover:bg-pink-100/60 hover:text-pink-600 transition-colors flex items-center justify-center" title="글자색">
+                  <i class="fa-solid fa-font text-sm"></i>
+                </button>
+                <div class="absolute left-0 mt-1 hidden group-hover:grid grid-cols-4 gap-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xl z-20">
+                  <button onclick="execEditorCommand('foreColor', '#1e293b')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-slate-800" title="검정"></button>
+                  <button onclick="execEditorCommand('foreColor', '#ef4444')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-red-500" title="빨강"></button>
+                  <button onclick="execEditorCommand('foreColor', '#3b82f6')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-blue-500" title="파랑"></button>
+                  <button onclick="execEditorCommand('foreColor', '#10b981')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-emerald-500" title="초록"></button>
+                  <button onclick="execEditorCommand('foreColor', '#f59e0b')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-amber-500" title="노랑"></button>
+                  <button onclick="execEditorCommand('foreColor', '#f97316')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-orange-500" title="주황"></button>
+                  <button onclick="execEditorCommand('foreColor', '#a855f7')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-purple-500" title="보라"></button>
+                </div>
+              </div>
+
+              <!-- 배경 형광펜 색상 (7가지) -->
+              <div class="relative group">
+                <button onmousedown="event.preventDefault()" class="w-8 h-8 rounded hover:bg-pink-100/60 hover:text-pink-600 transition-colors flex items-center justify-center" title="형광펜 배경색">
+                  <i class="fa-solid fa-highlighter text-sm"></i>
+                </button>
+                <div class="absolute left-0 mt-1 hidden group-hover:grid grid-cols-4 gap-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xl z-20">
+                  <button onclick="execEditorCommand('hiliteColor', 'rgba(0,0,0,0)')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded border border-gray-300 flex items-center justify-center" title="투명">X</button>
+                  <button onclick="execEditorCommand('hiliteColor', '#fef08a')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-yellow-200" title="연노랑"></button>
+                  <button onclick="execEditorCommand('hiliteColor', '#bfdbfe')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-blue-200" title="연파랑"></button>
+                  <button onclick="execEditorCommand('hiliteColor', '#bbf7d0')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-green-200" title="연초록"></button>
+                  <button onclick="execEditorCommand('hiliteColor', '#fbcfe8')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-pink-200" title="연분홍"></button>
+                  <button onclick="execEditorCommand('hiliteColor', '#fed7aa')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-orange-200" title="연주황"></button>
+                  <button onclick="execEditorCommand('hiliteColor', '#e9d5ff')" onmousedown="event.preventDefault()" class="w-5 h-5 rounded bg-purple-200" title="연보라"></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 에디터 영역 (contenteditable) -->
+            <div id="editor-container" class="flex-grow p-6 overflow-y-auto focus:outline-none text-base" contenteditable="true" placeholder="이곳에 수업 아이디어나 할 일 목록을 작성해 보세요. 자동으로 완벽하게 저장됩니다...">
+            </div>
+
+            <!-- 하단 자동저장 상태바 -->
+            <div class="bg-gray-50 border-t border-gray-100 px-4 py-2 flex items-center justify-between text-xs text-gray-400">
+              <span id="save-status"><i class="fa-solid fa-cloud-arrow-up text-pink-400"></i> 실시간 자동 보관 작동 중</span>
+              <span id="char-counter">0자 작성됨</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- [탭 4] 타이머 (Timer) -->
+      <section id="content-timer" class="tab-content hidden">
+        <div class="bg-white rounded-3xl p-6 shadow-xl border border-pink-100 flex flex-col items-center">
+          
+          <!-- 상단 헤더 -->
+          <div class="w-full text-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              ⏳ 집중 몰입 타이머
+            </h2>
+            <p class="text-sm text-gray-400 mt-1">소리 경보 장치가 탑재되어 학습 집중을 돕는 정밀 전자 타이머입니다.</p>
+          </div>
+
+          <!-- 1. 시간 설정 입력 윈도우 (동작하지 않을 때 노출) -->
+          <div id="timer-setup-screen" class="w-full max-w-md bg-pink-50/50 p-6 rounded-3xl border border-pink-100 flex flex-col items-center my-6">
+            <div class="flex items-center gap-4 mb-6">
+              <div class="flex flex-col items-center">
+                <span class="text-xs font-bold text-pink-700 mb-1">분 (MIN)</span>
+                <input type="number" id="setup-min" value="10" min="0" max="99" class="w-24 p-3 rounded-2xl border-2 border-pink-200 text-center text-3xl font-extrabold text-pink-600 focus:outline-none focus:border-pink-500">
+              </div>
+              <span class="text-4xl text-pink-300 font-bold self-end mb-2">:</span>
+              <div class="flex flex-col items-center">
+                <span class="text-xs font-bold text-pink-700 mb-1">초 (SEC)</span>
+                <input type="number" id="setup-sec" value="0" min="0" max="59" class="w-24 p-3 rounded-2xl border-2 border-pink-200 text-center text-3xl font-extrabold text-pink-600 focus:outline-none focus:border-pink-500">
+              </div>
+            </div>
+
+            <!-- 자주 사용하는 시간 단축 버튼 -->
+            <div class="flex gap-2 mb-6 flex-wrap justify-center">
+              <button onclick="setQuickTimer(1)" class="px-3.5 py-1.5 bg-white border border-pink-200 rounded-xl text-xs font-bold text-pink-600 hover:bg-pink-100/50 transition-colors">+1분</button>
+              <button onclick="setQuickTimer(5)" class="px-3.5 py-1.5 bg-white border border-pink-200 rounded-xl text-xs font-bold text-pink-600 hover:bg-pink-100/50 transition-colors">+5분</button>
+              <button onclick="setQuickTimer(10)" class="px-3.5 py-1.5 bg-white border border-pink-200 rounded-xl text-xs font-bold text-pink-600 hover:bg-pink-100/50 transition-colors">+10분</button>
+              <button onclick="setQuickTimer(30)" class="px-3.5 py-1.5 bg-white border border-pink-200 rounded-xl text-xs font-bold text-pink-600 hover:bg-pink-100/50 transition-colors">+30분</button>
+            </div>
+
+            <button onclick="startTimer()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-2xl font-bold text-lg shadow-md hover:shadow-lg transition-all">
+              집중 시작하기
+            </button>
+          </div>
+
+          <!-- 2. 시간 진행 대형 전광판 (작동할 때 노출) -->
+          <div id="timer-active-screen" class="hidden w-full max-w-2xl flex flex-col items-center my-6">
+            <!-- 거대 타이머 수치 표시 (tabular-nums 필수 적용) -->
+            <div id="timer-display" class="text-[100px] md:text-[140px] font-black tabular-nums tracking-tighter leading-none select-none text-pink-500 drop-shadow-md">
+              10:00
+            </div>
+
+            <!-- 진행 표시 프로그레스 바 -->
+            <div class="w-full bg-gray-100 h-6 rounded-full overflow-hidden mb-8 mt-6 border border-gray-200 p-1">
+              <div id="timer-progress-bar" class="h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+            </div>
+
+            <!-- 컨트롤 버튼 -->
+            <div class="flex items-center gap-4">
+              <button onclick="togglePauseResume()" id="btn-pause-resume" class="px-8 py-3.5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                <i class="fa-solid fa-pause"></i> <span>일시 정지</span>
+              </button>
+              <button onclick="resetTimer()" class="px-8 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-bold transition-all flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> <span>종료 및 리셋</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 바닥글 및 Firebase 설정 안내 -->
+    <footer class="bg-white border-t border-gray-100 py-6 mt-12 text-center text-xs text-gray-400 z-10">
+      <div class="max-w-6xl mx-auto px-4 flex flex-col items-center gap-2">
+        <p>© 2026 우리 반 설렘 학급 웹 상자. 모든 임시 정보는 브라우저 내부(localStorage)에 철저히 안전하게 암호화 보관됩니다.</p>
+        <p class="text-[10px]">Cloud Sync Engine (Firebase) Ready & Integratable.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- [커스텀 모달] 시간표 일괄/선택 삭제 선택 분기용 -->
+  <div id="clear-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full mx-4 shadow-2xl border border-pink-100 transform scale-95 transition-transform duration-300">
+      <div class="flex items-center gap-3 text-amber-500 mb-4">
+        <i class="fa-solid fa-circle-exclamation text-3xl"></i>
+        <h3 class="text-xl font-bold text-gray-800">시간표를 어떻게 정리할까요?</h3>
+      </div>
+      <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+        시간표의 고정된 칸을 안전하게 보존하고 나머지 일정만 비울지, 아니면 잠금 장치에 상관없이 모든 칸을 완전 무결하게 초기화할지 선택해 주십시오.
+      </p>
+      <div class="flex flex-col gap-2.5">
+        <button onclick="clearTimetable(true)" class="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-shield-halved"></i> <span>잠금 고정된 칸 유지하고 비우기</span>
+        </button>
+        <button onclick="clearTimetable(false)" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-trash-arrow-up"></i> <span>전부 지우기 (잠금 포함 완전 파괴)</span>
+        </button>
+        <button onclick="closeClearModal()" class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold rounded-2xl text-sm transition-colors">
+          돌아가기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 파티클 이펙트용 캔버스 (랜덤뽑기 전용 폭죽 배경 레이어) -->
+  <canvas id="confetti-canvas" class="pointer-events-none fixed inset-0 z-50 w-full h-full"></canvas>
+
+  <!-- ======================================================= -->
+  <!-- JAVASCRIPT LOGIC START -->
+  <!-- ======================================================= -->
+  <script>
+    // 전역 상태 통합 관리 객체
+    const STATE_KEY = 'classroom_tools_data';
+    let appState = {
+      timetable: [], // 30개 과목 셀 상태
+      random: {
+        picked: []   // 현재 추첨된 번호 이력
+      },
+      memos: [],     // 저장된 메모 리스트
+      activeMemoId: null
+    };
+
+    // UI 모드 관련 변수
+    let isTimetableEditMode = false;
+    let selectedTimetableIndices = []; // 일괄 처리용 배열
+
+    // 1. 초기 셋업 & 브라우저 LocalStorage 로드
+    window.addEventListener('load', () => {
+      initDecorations(); // 벚꽃 흔들림 레이어 생성
+      loadState();
+      
+      // 시간표 구조 렌더링
+      renderTimetable();
+      // 메모장 구성
+      renderMemoList();
+      selectMemo(appState.activeMemoId);
+      
+      // 타이머 설정 복구 (입력값)
+      document.getElementById('setup-min').value = localStorage.getItem('timer_prev_min') || "10";
+      document.getElementById('setup-sec').value = localStorage.getItem('timer_prev_sec') || "0";
+
+      // 로딩 스크린 해제
+      setTimeout(() => {
+        const loader = document.getElementById('loading-screen');
+        loader.classList.add('opacity-0');
+        setTimeout(() => loader.remove(), 500);
+      }, 800);
+    });
+
+    // 벚꽃 데코 애니메이션
+    function initDecorations() {
+      const container = document.getElementById('petal-container');
+      const particleCount = 15;
+      for (let i = 0; i < particleCount; i++) {
+        const petal = document.createElement('div');
+        petal.className = 'cherry-petal';
+        petal.style.left = Math.random() * 100 + 'vw';
+        petal.style.width = Math.random() * 12 + 8 + 'px';
+        petal.style.height = Math.random() * 12 + 8 + 'px';
+        petal.style.animationDuration = Math.random() * 8 + 6 + 's';
+        petal.style.animationDelay = Math.random() * -10 + 's';
+        container.appendChild(petal);
+      }
+    }
+
+    // 상태 복구 및 생성
+    function loadState() {
+      const raw = localStorage.getItem(STATE_KEY);
+      if (raw) {
+        try {
+          appState = JSON.parse(raw);
+        } catch (e) {
+          console.error("데이터 파싱 에러 - 초기화 진행");
+        }
+      }
+
+      // 시간표 빈 배열 예외 초기 보정 (6행 5열 = 30칸)
+      if (!appState.timetable || appState.timetable.length !== 30) {
+        appState.timetable = [];
+        for (let i = 0; i < 30; i++) {
+          appState.timetable.push({
+            index: i,
+            text: "",
+            color: "text-slate-800",
+            locked: false
+          });
+        }
+        saveState();
+      }
+
+      // 메모 예외 보정
+      if (!appState.memos) {
+        appState.memos = [];
+      }
+      if (appState.memos.length === 0) {
+        // 샘플 가이드 메모 하나 삽입
+        appState.memos.push({
+          id: 'welcome-memo',
+          title: '📌 처음 만나는 메모장 가이드',
+          content: '<b>환영합니다!</b><br>이곳은 서식 도구가 결합된 풍부한 기능의 학급 메모장입니다.<br>왼쪽에서 새 메모를 추가할 수 있고 내용 수정 시 실시간 저장이 완료됩니다.',
+          date: new Date().toLocaleString()
+        });
+        appState.activeMemoId = 'welcome-memo';
+        saveState();
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STATE_KEY, JSON.stringify(appState));
+    }
+
+
+    // =======================================================
+    // TAB NAVIGATION
+    // =======================================================
+    function switchTab(tabName) {
+      // 모든 컨텐츠 숨기기
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+
+      // 탭 활성화 클래스 조절
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 text-gray-500 hover:text-pink-600";
+      });
+      
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      activeBtn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 bg-white text-pink-600 shadow-sm border border-pink-100";
+
+      // 탭 전환 시 사이드 이펙트 제어
+      if (tabName === 'random') {
+        renderNumberBoard();
+      }
+    }
+
+
+    // =======================================================
+    // 1. 시간표 (Timetable) 로직
+    // =======================================================
+    function renderTimetable() {
+      const tbody = document.getElementById('timetable-body');
+      tbody.innerHTML = '';
+
+      for (let row = 0; row < 6; row++) {
+        const tr = document.createElement('tr');
+        
+        // 1열: 교시 번호 (노란색 배경)
+        const tdPeriod = document.createElement('td');
+        tdPeriod.className = "bg-yellow-200 border border-yellow-300 p-4 text-yellow-900 font-extrabold w-24 text-base shadow-sm";
+        tdPeriod.innerText = `${row + 1}교시`;
+        tr.appendChild(tdPeriod);
+
+        // 월~금(5열) 렌더링
+        for (let col = 0; col < 5; col++) {
+          const index = row * 5 + col;
+          const cellData = appState.timetable[index];
+          
+          const td = document.createElement('td');
+          td.className = "border border-pink-100 p-2 relative h-28 w-40 transition-colors duration-250 bg-white";
+
+          if (isTimetableEditMode) {
+            // [설정 모드] 체크박스, 잠금 표시, 입력 textarea 노출
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = "absolute top-2 left-2 w-4.5 h-4.5 accent-pink-500 cursor-pointer z-10";
+            checkbox.checked = selectedTimetableIndices.includes(index);
+            checkbox.onclick = (e) => {
+              toggleSelectCell(index);
+            };
+
+            const textarea = document.createElement('textarea');
+            textarea.className = `w-full h-full bg-yellow-50/50 p-2 pt-6 rounded-xl border border-yellow-200 resize-none text-center focus:bg-white focus:ring-2 focus:ring-pink-400 focus:outline-none text-sm font-semibold transition-all ${cellData.color}`;
+            textarea.value = cellData.text;
+            textarea.dataset.index = index;
+            
+            // 키보드 방향키 이동 이벤트 리스너 바인딩
+            textarea.onkeydown = (e) => handleTimetableKeyDown(e, index);
+            textarea.oninput = (e) => {
+              appState.timetable[index].text = e.target.value;
+              saveState();
+            };
+
+            // 잠금 상태인 경우 시각화 자물쇠 아이콘
+            if (cellData.locked) {
+              const lockIcon = document.createElement('i');
+              lockIcon.className = "fa-solid fa-lock absolute top-2.5 right-2.5 text-emerald-500 text-xs";
+              td.appendChild(lockIcon);
+            }
+
+            td.appendChild(checkbox);
+            td.appendChild(textarea);
+          } else {
+            // [일반 뷰 모드]
+            const container = document.createElement('div');
+            container.className = "w-full h-full flex flex-col items-center justify-center p-1";
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = `text-base font-extrabold text-center block break-all whitespace-pre-wrap ${cellData.color}`;
+            textSpan.innerText = cellData.text || "-";
+            container.appendChild(textSpan);
+
+            // 잠금 자물쇠 아이콘
+            if (cellData.locked) {
+              const lockBadge = document.createElement('div');
+              lockBadge.className = "absolute top-2 right-2 text-emerald-400 text-xs";
+              lockBadge.innerHTML = '<i class="fa-solid fa-lock"></i>';
+              td.appendChild(lockBadge);
+            }
+
+            td.appendChild(container);
+          }
+
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+    }
+
+    // 방향키 이동 로직 (엑셀형 UX)
+    function handleTimetableKeyDown(e, index) {
+      let targetIndex = index;
+      
+      switch (e.key) {
+        case 'ArrowUp':
+          if (index >= 5) targetIndex = index - 5;
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          if (index < 25) targetIndex = index + 5;
+          e.preventDefault();
+          break;
+        case 'ArrowLeft':
+          if (index % 5 > 0) targetIndex = index - 1;
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          if (index % 5 < 4) targetIndex = index + 1;
+          e.preventDefault();
+          break;
+        default:
+          return; // 방향키 이외 키 패스
+      }
+
+      if (targetIndex !== index) {
+        const targetTextarea = document.querySelector(`textarea[data-index="${targetIndex}"]`);
+        if (targetTextarea) {
+          targetTextarea.focus();
+          // 커서를 텍스트 끝으로 이동
+          const len = targetTextarea.value.length;
+          targetTextarea.setSelectionRange(len, len);
+        }
+      }
+    }
+
+    // 설정 모드 활성/비활성 토글
+    function toggleTimetableMode() {
+      isTimetableEditMode = !isTimetableEditMode;
+      selectedTimetableIndices = []; // 선택 비우기
+      
+      const badge = document.getElementById('mode-badge');
+      const btnText = document.getElementById('btn-edit-text');
+      const batchBar = document.getElementById('batch-bar');
+
+      if (isTimetableEditMode) {
+        badge.innerText = '설정 모드';
+        badge.className = 'text-xs bg-pink-100 text-pink-800 px-3 py-1 rounded-full font-bold';
+        btnText.innerText = '설정 저장 및 뷰 전환';
+        batchBar.classList.remove('hidden');
+        batchBar.classList.add('flex');
+      } else {
+        badge.innerText = '일반 모드';
+        badge.className = 'text-xs bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-medium';
+        btnText.innerText = '시간표 설정 모드';
+        batchBar.classList.add('hidden');
+        batchBar.classList.remove('flex');
+        saveState();
+      }
+      renderTimetable();
+    }
+
+    // 선택 토글
+    function toggleSelectCell(index) {
+      const pos = selectedTimetableIndices.indexOf(index);
+      if (pos > -1) {
+        selectedTimetableIndices.splice(pos, 1);
+      } else {
+        selectedTimetableIndices.push(index);
+      }
+    }
+
+    // 일괄 선택/해제
+    function selectAllTimetable(bool) {
+      if (bool) {
+        selectedTimetableIndices = Array.from({length: 30}, (_, i) => i);
+      } else {
+        selectedTimetableIndices = [];
+      }
+      renderTimetable();
+    }
+
+    // 일괄 컬러 적용
+    function batchChangeColor(colorClass) {
+      if (selectedTimetableIndices.length === 0) {
+        showFeedbackMessage("색상을 변경할 시간표 칸을 먼저 왼쪽 체크박스로 체크해 주세요!");
+        return;
+      }
+      selectedTimetableIndices.forEach(idx => {
+        appState.timetable[idx].color = colorClass;
+      });
+      saveState();
+      renderTimetable();
+    }
+
+    // 일괄 자물쇠 고정
+    function batchSetLock(bool) {
+      if (selectedTimetableIndices.length === 0) {
+        showFeedbackMessage("잠금 설정할 대상 칸을 먼저 선택해 주세요!");
+        return;
+      }
+      selectedTimetableIndices.forEach(idx => {
+        appState.timetable[idx].locked = bool;
+      });
+      saveState();
+      renderTimetable();
+    }
+
+    // 모달창 제어 (전체 삭제 분기)
+    function openClearModal() {
+      const modal = document.getElementById('clear-modal');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.querySelector('div').classList.remove('scale-95');
+    }
+
+    function closeClearModal() {
+      const modal = document.getElementById('clear-modal');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      modal.querySelector('div').classList.add('scale-95');
+    }
+
+    // 시간표 클리어 기능 (모달 내부 콜백)
+    function clearTimetable(keepLocked) {
+      appState.timetable.forEach((cell, idx) => {
+        if (keepLocked && cell.locked) {
+          // 잠겨있는 칸은 보존
+          return;
+        }
+        // 이외 초기화
+        appState.timetable[idx].text = "";
+        appState.timetable[idx].color = "text-slate-800";
+        appState.timetable[idx].locked = false;
+      });
+
+      saveState();
+      closeClearModal();
+      renderTimetable();
+      showFeedbackMessage("시간표가 말끔하게 정리되었습니다!");
+    }
+
+
+    // =======================================================
+    // 2. 랜덤뽑기 (Random Picker)
+    // =======================================================
+    function renderNumberBoard() {
+      const grid = document.getElementById('number-board-grid');
+      grid.innerHTML = '';
+
+      const start = parseInt(document.getElementById('random-start').value) || 1;
+      const end = parseInt(document.getElementById('random-end').value) || 30;
+
+      if (start > end) return;
+
+      for (let i = start; i <= end; i++) {
+        const block = document.createElement('div');
+        const isPicked = appState.random.picked.includes(i);
+        
+        block.className = `p-3 rounded-xl text-center text-sm font-extrabold border transition-all ${
+          isPicked 
+            ? 'bg-gray-100 border-gray-200 text-gray-400 line-through' 
+            : 'bg-pink-50 border-pink-100 text-pink-700 shadow-sm'
+        }`;
+        block.innerText = i;
+        grid.appendChild(block);
+      }
+    }
+
+    // 번호 추첨 실행 (Fisher-Yates 셔플)
+    function drawRandomNumbers() {
+      const start = parseInt(document.getElementById('random-start').value) || 1;
+      const end = parseInt(document.getElementById('random-end').value) || 30;
+      const count = parseInt(document.getElementById('random-count').value) || 1;
+
+      if (start > end) {
+        showFeedbackMessage("시작 번호가 끝 번호보다 클 수 없습니다.");
+        return;
+      }
+      if (count < 1) {
+        showFeedbackMessage("최소 1개 이상을 추첨해야 합니다.");
+        return;
+      }
+
+      // 후보 풀 빌드
+      let candidates = [];
+      for (let i = start; i <= end; i++) {
+        if (!appState.random.picked.includes(i)) {
+          candidates.push(i);
+        }
+      }
+
+      if (candidates.length === 0) {
+        showFeedbackMessage("범위 내 모든 번호가 이미 다 뽑혔습니다! 먼저 초기화를 해주세요.");
+        return;
+      }
+
+      // 뽑을 개수가 후보 잔여량보다 큰 경우 보정 조절
+      const actualCount = Math.min(count, candidates.length);
+
+      // Fisher-Yates 셔플 수행
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
+
+      // 최종 당첨자 추출
+      const luckyBatch = candidates.slice(0, actualCount);
+
+      // 당첨자 이력 추가 저장
+      appState.random.picked.push(...luckyBatch);
+      saveState();
+
+      // 화면 거대 이펙트 및 폭죽 애니메이션 개시
+      animateDrawEffect(luckyBatch);
+    }
+
+    // 추첨 연출 (숫자 셔플 돌다가 쾅!)
+    function animateDrawEffect(luckyBatch) {
+      const display = document.getElementById('draw-display');
+      let shuffleTicks = 0;
+      
+      const interval = setInterval(() => {
+        // 무작위 모형 숫자 연속 출력 연출
+        display.innerHTML = Array.from({length: luckyBatch.length}, () => 
+          `<span class="text-gray-300 opacity-60 text-5xl md:text-6xl">${Math.floor(Math.random() * 50) + 1}</span>`
+        ).join(' ');
+        
+        shuffleTicks++;
+        if (shuffleTicks > 12) {
+          clearInterval(interval);
+          
+          // 최종 행운 번호 결정 노출
+          display.innerHTML = luckyBatch.map(num => 
+            `<div class="animate-pop-in bg-gradient-to-r from-pink-500 to-rose-500 text-white w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center shadow-lg border-4 border-white font-black">${num}</div>`
+          ).join('');
+
+          // 펑!! 폭죽 놀이 터뜨리기
+          triggerConfettiEffect();
+          renderNumberBoard();
+        }
+      }, 70);
+    }
+
+    // 추첨 초기화
+    function resetRandomPicker() {
+      appState.random.picked = [];
+      saveState();
+      document.getElementById('draw-display').innerHTML = '<span class="text-2xl text-gray-400 font-bold">리셋 완료! 새 추첨을 시작하세요.</span>';
+      renderNumberBoard();
+      showFeedbackMessage("이전 모든 번호 추첨 현황판 기록이 리셋되었습니다.");
+    }
+
+
+    // =======================================================
+    // 3. 메모장 (Notepad)
+    // =======================================================
+    function renderMemoList() {
+      const listContainer = document.getElementById('memo-list');
+      listContainer.innerHTML = '';
+
+      appState.memos.forEach(memo => {
+        const isActive = memo.id === appState.activeMemoId;
+        const memoDiv = document.createElement('div');
+        memoDiv.className = `p-3 rounded-2xl cursor-pointer border transition-all relative group ${
+          isActive 
+            ? 'bg-pink-100/80 border-pink-200 text-pink-900 shadow-sm' 
+            : 'bg-white hover:bg-pink-50/30 border-gray-100 text-gray-700'
+        }`;
+        memoDiv.onclick = () => selectMemo(memo.id);
+
+        const titleText = memo.title.trim() || "제목 없는 수업 노트";
+        const cleanContent = memo.content.replace(/<[^>]*>/g, '').substring(0, 30) || "내용이 아직 비어있습니다.";
+
+        memoDiv.innerHTML = `
+          <h4 class="text-sm font-extrabold truncate pr-6">${titleText}</h4>
+          <p class="text-xs text-gray-400 mt-1 truncate">${cleanContent}</p>
+          <span class="text-[9px] text-gray-400 block mt-1.5"><i class="fa-regular fa-clock"></i> ${memo.date}</span>
+          <button onclick="event.stopPropagation(); deleteMemo('${memo.id}')" class="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 hover:text-rose-600 text-gray-400 transition-opacity p-1" title="메모지 삭제">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        `;
+        listContainer.appendChild(memoDiv);
+      });
+    }
+
+    function selectMemo(memoId) {
+      const memo = appState.memos.find(m => m.id === memoId);
+      if (!memo) {
+        // 발견되지 않는 경우 최신 첫번째 선정
+        if (appState.memos.length > 0) {
+          appState.activeMemoId = appState.memos[0].id;
+          selectMemo(appState.activeMemoId);
+        } else {
+          document.getElementById('editor-container').innerHTML = '';
+          document.getElementById('mobile-memo-status').innerText = '메모 없음';
+        }
+        return;
+      }
+
+      appState.activeMemoId = memoId;
+      const editor = document.getElementById('editor-container');
+      
+      // 만약 편집 내용이 초기화되어 들어간다면 HTML 적용되게
+      editor.innerHTML = memo.content;
+      document.getElementById('mobile-memo-status').innerText = memo.title || '메모 보기';
+      
+      // 카운터 및 마크 갱신
+      updateCharCounter();
+      renderMemoList();
+    }
+
+    // 신규 메모 생성
+    function addNewMemo() {
+      const newId = 'memo-' + Date.now();
+      const newMemoObj = {
+        id: newId,
+        title: '✏️ 새 수업 기록',
+        content: '여기에 새로운 학급 노트를 기록하세요.',
+        date: new Date().toLocaleString()
+      };
+
+      appState.memos.unshift(newMemoObj);
+      appState.activeMemoId = newId;
+      saveState();
+
+      renderMemoList();
+      selectMemo(newId);
+      showFeedbackMessage("신규 노트 페이지가 생성되었습니다!");
+    }
+
+    // 메모 영구 삭제
+    function deleteMemo(memoId) {
+      const targetIdx = appState.memos.findIndex(m => m.id === memoId);
+      if (targetIdx > -1) {
+        appState.memos.splice(targetIdx, 1);
+        if (appState.activeMemoId === memoId) {
+          appState.activeMemoId = appState.memos.length > 0 ? appState.memos[0].id : null;
+        }
+        saveState();
+        renderMemoList();
+        selectMemo(appState.activeMemoId);
+        showFeedbackMessage("선택하신 메모를 정상 삭제했습니다.");
+      }
+    }
+
+    // 실시간 감지 에디터 글자수 카운트 & 오토 세이브
+    const editorEl = document.getElementById('editor-container');
+    editorEl.addEventListener('input', () => {
+      if (!appState.activeMemoId) return;
+
+      const currentMemo = appState.memos.find(m => m.id === appState.activeMemoId);
+      if (currentMemo) {
+        const fullHTML = editorEl.innerHTML;
+        
+        // 첫 줄 텍스트 추출하여 메모의 대표 타이틀로 자동 세팅
+        const textExtract = editorEl.innerText.trim();
+        const firstLine = textExtract.split('\n')[0] || "작성 중인 노트";
+        
+        currentMemo.title = firstLine.substring(0, 20);
+        currentMemo.content = fullHTML;
+        currentMemo.date = new Date().toLocaleString();
+
+        saveState();
+        updateCharCounter();
+        
+        // 메모 목록을 디바운싱 없이 실시간 반영 시 포커스 아웃될 수 있으므로 타이틀 텍스트 부분만 선택 렌더링
+        const titleEl = document.querySelector(`[onclick="selectMemo('${currentMemo.id}')"] h4`);
+        if (titleEl) titleEl.innerText = currentMemo.title;
+        const pEl = document.querySelector(`[onclick="selectMemo('${currentMemo.id}')"] p`);
+        if (pEl) pEl.innerText = textExtract.substring(0, 30);
+      }
+    });
+
+    function updateCharCounter() {
+      const plainText = editorEl.innerText || "";
+      const len = plainText.trim().length;
+      document.getElementById('char-counter').innerText = `${len}자 작성됨`;
+    }
+
+    // WYSIWYG 서식 빌더 명령 수행 유틸
+    function execEditorCommand(command, value = null) {
+      document.execCommand(command, false, value);
+      editorEl.focus(); // 서식 후 강제 포커스 백
+      updateCharCounter();
+    }
+
+    // 모바일 전용 토글 사이드바
+    function toggleMemoSidebar() {
+      const sidebar = document.getElementById('memo-sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+      sidebar.classList.toggle('hidden');
+    }
+
+
+    // =======================================================
+    // 4. 타이머 (Timer) 로직
+    // =======================================================
+    let timerDurationTotal = 0; // 초 단위
+    let timerRemaining = 0;     // 초 단위
+    let timerIntervalId = null;
+    let isTimerPaused = false;
+
+    // Web Audio API 오디오 노드
+    let audioContext = null;
+    let alarmLoopId = null;
+
+    // 브라우저 오디오 컨텍스트 지연 초기화 (상호작용 시 활성화)
+    function initAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    // 고정 프리셋 주입
+    function setQuickTimer(minutes) {
+      const minInput = document.getElementById('setup-min');
+      let currentVal = parseInt(minInput.value) || 0;
+      minInput.value = currentVal + minutes;
+    }
+
+    // 타이머 스타트 시동
+    function startTimer() {
+      initAudioContext();
+      stopAlarmSound(); // 혹시 돌고있을 사이렌 소거
+
+      const min = parseInt(document.getElementById('setup-min').value) || 0;
+      const sec = parseInt(document.getElementById('setup-sec').value) || 0;
+
+      timerDurationTotal = (min * 60) + sec;
+      if (timerDurationTotal <= 0) {
+        showFeedbackMessage("타이머를 시작할 시간을 바르게 등록해 주십시오.");
+        return;
+      }
+
+      // 이전 값 로컬 보존 복구용
+      localStorage.setItem('timer_prev_min', min);
+      localStorage.setItem('timer_prev_sec', sec);
+
+      timerRemaining = timerDurationTotal;
+      isTimerPaused = false;
+
+      // 화면 패널 전환
+      document.getElementById('timer-setup-screen').classList.add('hidden');
+      document.getElementById('timer-active-screen').classList.remove('hidden');
+
+      updateTimerDisplay();
+
+      // 기존 인터벌 확실하게 소거
+      if (timerIntervalId) clearInterval(timerIntervalId);
+
+      timerIntervalId = setInterval(tickTimer, 1000);
+    }
+
+    // 1초마다 루프 도는 실시간 핸들러
+    function tickTimer() {
+      if (isTimerPaused) return;
+
+      timerRemaining--;
+      updateTimerDisplay();
+
+      // 10초 이하 남았을 때 짧은 비프 '틱' 소리 작동
+      if (timerRemaining <= 10 && timerRemaining > 0) {
+        playTickSound();
+      }
+
+      // 기한 종료
+      if (timerRemaining <= 0) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+        
+        // 최종 기계 경보음 울리기 개시
+        playFinalAlarm();
+      }
+    }
+
+    // 화면 뷰 수치 갱신
+    function updateTimerDisplay() {
+      const display = document.getElementById('timer-display');
+      const progressBar = document.getElementById('timer-progress-bar');
+
+      const min = Math.floor(timerRemaining / 60);
+      const sec = timerRemaining % 60;
+      
+      const strMin = String(min).padStart(2, '0');
+      const strSec = String(sec).padStart(2, '0');
+
+      display.innerText = `${strMin}:${strSec}`;
+
+      // 남은 잔여 비율
+      const ratio = (timerRemaining / timerDurationTotal) * 100;
+      progressBar.style.width = `${ratio}%`;
+
+      // 20% 미만 남았거나 30초 이하 잔여시 극도의 주의 집중 레드 연출 테마로 변경
+      if (ratio < 20 || timerRemaining <= 30) {
+        display.className = "text-[100px] md:text-[140px] font-black tabular-nums tracking-tighter leading-none select-none text-red-500 drop-shadow-md animate-pulse";
+        progressBar.className = "h-full bg-gradient-to-r from-red-500 to-rose-600 rounded-full transition-all duration-1000 ease-linear";
+      } else {
+        display.className = "text-[100px] md:text-[140px] font-black tabular-nums tracking-tighter leading-none select-none text-pink-500 drop-shadow-md";
+        progressBar.className = "h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-1000 ease-linear";
+      }
+    }
+
+    // 타이머 일시정지 / 다시시작
+    function togglePauseResume() {
+      isTimerPaused = !isTimerPaused;
+      const btn = document.getElementById('btn-pause-resume');
+      if (isTimerPaused) {
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>이어서 시작</span>';
+        btn.className = "px-8 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2";
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i> <span>일시 정지</span>';
+        btn.className = "px-8 py-3.5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2";
+      }
+    }
+
+    // 타이머 초기화 종료
+    function resetTimer() {
+      if (timerIntervalId) {
+        clearInterval(timerIntervalId);
+        timerIntervalId = null;
+      }
+      stopAlarmSound();
+      isTimerPaused = false;
+
+      // UI 원복
+      document.getElementById('timer-setup-screen').classList.remove('hidden');
+      document.getElementById('timer-active-screen').classList.add('hidden');
+      
+      const btn = document.getElementById('btn-pause-resume');
+      btn.innerHTML = '<i class="fa-solid fa-pause"></i> <span>일시 정지</span>';
+      btn.className = "px-8 py-3.5 bg-pink-500 hover:bg-pink-600 text-white rounded-2xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2";
+    }
+
+    // 1초 단위 고주파 틱 소리 메이커 (Web Audio API)
+    function playTickSound() {
+      try {
+        if (!audioContext) return;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, audioContext.currentTime); // 1.2kHz 고음 틱
+        
+        gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+        
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.06);
+      } catch (err) {
+        console.error("오디오 출력 제한 또는 실패:", err);
+      }
+    }
+
+    // 기한 종료시 반복 삑 삑 경보 시스템
+    function playFinalAlarm() {
+      try {
+        if (!audioContext) return;
+        
+        // 반복 비프 인터벌 구동 (0.8초 주기)
+        alarmLoopId = setInterval(() => {
+          // '삑- 삑-' 기계식 스퀘어 파동 출력
+          playDoubleBeep(880, 0.15);
+        }, 850);
+        
+        showFeedbackMessage("⏰ 집중 완료! 설정 시간이 끝났습니다.");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function playDoubleBeep(freq, duration) {
+      if (!audioContext) return;
+      const now = audioContext.currentTime;
+
+      // 비프 1
+      createBeep(freq, now, duration);
+      // 비프 2 (살짝 밀린 타임 딜레이 연출)
+      createBeep(freq, now + 0.22, duration);
+    }
+
+    function createBeep(freq, startTime, duration) {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      osc.type = 'square'; // 선명한 전자기계 알림을 유도하는 스퀘어 웨이브
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.12, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.02);
+    }
+
+    function stopAlarmSound() {
+      if (alarmLoopId) {
+        clearInterval(alarmLoopId);
+        alarmLoopId = null;
+      }
+    }
+
+
+    // =======================================================
+    // 5. 폭죽 (Confetti) 파티클 물리 엔진
+    // =======================================================
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+    let isConfettiRunning = false;
+
+    // 윈도우 크기 가변 대응
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    function triggerConfettiEffect() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      confettiParticles = [];
+      const particleCount = 140;
+
+      // 화면 정중앙 좌표 설정
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height * 0.45;
+
+      const colors = ['#f43f5e', '#ec4899', '#f472b6', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 12 + 6;
+
+        confettiParticles.push({
+          x: centerX,
+          y: centerY,
+          size: Math.random() * 8 + 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: Math.cos(angle) * velocity,
+          vy: Math.sin(angle) * velocity - Math.random() * 4, // 상단 가속 유도
+          gravity: 0.3,
+          friction: 0.98,
+          rotation: Math.random() * 360,
+          rotationSpeed: Math.random() * 10 - 5,
+          opacity: 1
+        });
+      }
+
+      if (!isConfettiRunning) {
+        isConfettiRunning = true;
+        animateConfetti();
+      }
+    }
+
+    function animateConfetti() {
+      if (confettiParticles.length === 0) {
+        isConfettiRunning = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+
+        // 물리 연산 반영
+        p.vx *= p.friction;
+        p.vy *= p.friction;
+        p.vy += p.gravity;
+        
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.rotationSpeed;
+        p.opacity -= 0.012; // 점진적 알파 페이드 아웃
+
+        if (p.opacity <= 0 || p.y > canvas.height) {
+          confettiParticles.splice(i, 1);
+          continue;
+        }
+
+        // 그리기
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        
+        // 파티클 모양 다각화 (사각형 및 원형 혼합)
+        if (i % 2 === 0) {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      requestAnimationFrame(animateConfetti);
+    }
+
+
+    // =======================================================
+    // 6. 편의용 하단 임시 알림 토스트 (Feedback Message)
+    // =======================================================
+    function showFeedbackMessage(msg) {
+      // 기존에 띄워진 토스트 제거
+      const prev = document.getElementById('toast-alert');
+      if (prev) prev.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'toast-alert';
+      toast.className = "fixed bottom-6 right-6 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-bold z-50 animate-pop-in border border-slate-700";
+      toast.innerHTML = `<i class="fa-solid fa-circle-check text-pink-400 text-base"></i><span>${msg}</span>`;
+      
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+        setTimeout(() => toast.remove(), 500);
+      }, 3200);
+    }
+
+
+    // =======================================================
+    // [클라우드 백업 통합] FIREBASE 연동 뼈대 (SDK 로드용)
+    // =======================================================
+    // 아래 주석과 코드는 차후 팀 단위 공유 및 다기기 실시간 공유가 필요할 시 
+    // 실제 Firebase Config 키를 대입하여 원활히 활성화가 가능한 구조화 설계서입니다.
+    /*
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+
+    // Firebase 연동을 활성화하려면 이 주석을 풀고 사용하세요.
+    // const app = initializeApp(firebaseConfig);
+    // const auth = getAuth(app);
+    // const db = getFirestore(app);
+    */
+  </script>
+</body>
+</html>
